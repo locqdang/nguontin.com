@@ -6,73 +6,16 @@ const trustSignals = [
   'Uy tín được xây dựng từ những tương tác thực tế',
 ];
 
-type BackendHealth = {
-  ok: boolean;
-  status: string;
-  detail: string;
-  checkedAt: string;
-};
-
-async function getBackendHealth(): Promise<BackendHealth> {
-  const apiBaseUrl =
-    process.env.INTERNAL_API_BASE_URL ??
-    process.env.NEXT_PUBLIC_API_BASE_URL ??
-    'http://127.0.0.1:8008';
-
-  const checkedAt = new Date().toLocaleString('vi-VN', {
-    timeZone: 'Asia/Ho_Chi_Minh',
-  });
-
-  try {
-    const response = await fetch(`${apiBaseUrl}/health`, {
-      cache: 'no-store',
-    });
-
-    if (!response.ok) {
-      return {
-        ok: false,
-        status: `HTTP ${response.status}`,
-        detail: 'Backend có phản hồi nhưng chưa sẵn sàng.',
-        checkedAt,
-      };
-    }
-
-    const payload = (await response.json()) as {
-      status?: string;
-      service?: string;
-    };
-
-    return {
-      ok: true,
-      status: payload.status ?? 'healthy',
-      detail: `Kết nối thành công tới ${payload.service ?? 'backend API'}.`,
-      checkedAt,
-    };
-  } catch (error) {
-    return {
-      ok: false,
-      status: 'unreachable',
-      detail:
-        error instanceof Error
-          ? `Chưa kết nối được backend: ${error.message}`
-          : 'Chưa kết nối được backend.',
-      checkedAt,
-    };
-  }
-}
-
-export default async function HomePage() {
-  const backendHealth = await getBackendHealth();
-
+export default function HomePage() {
   return (
     <main className="home-page">
       <section className="hero">
         <div className="logoWrap">
           <Image
-            src="/nguontin-logo.svg"
+            src="/logo.png"
             alt="NguonTin logo"
             width={220}
-            height={72}
+            height={220}
             priority
             className="heroLogo"
           />
@@ -95,20 +38,6 @@ export default async function HomePage() {
             Tìm hiểu cách hoạt động
           </a>
         </div>
-
-        <section className="statusPanel" aria-label="Tình trạng kết nối backend">
-          <p className="statusEyebrow">Trạng thái API</p>
-          <div className="statusSummaryRow">
-            <strong
-              className={backendHealth.ok ? 'statusBadge statusOk' : 'statusBadge statusError'}
-            >
-              {backendHealth.ok ? 'Đã kết nối' : 'Chưa kết nối'}
-            </strong>
-            <span className="statusCode">{backendHealth.status}</span>
-          </div>
-          <p className="statusDetail">{backendHealth.detail}</p>
-          <p className="statusTimestamp">Kiểm tra lúc: {backendHealth.checkedAt}</p>
-        </section>
       </section>
 
       <section className="cardGrid" id="how-it-works">
