@@ -41,6 +41,25 @@ The MVP and later versions should follow these principles:
 - Reputation should be earned through verified interactions
 - Core application data should stay in the app backend, not the CMS
 
+## 3.1 Front-facing language rule
+
+For the MVP:
+- the public site should be in Vietnamese
+- public URLs and front-facing navigation should follow Vietnamese product positioning
+- all front-facing user features should be written in Vietnamese
+- user-visible product copy should default to Vietnamese across the site and app
+
+This includes at minimum:
+- homepage and marketing pages
+- authentication screens
+- dashboards
+- request creation and management screens
+- pitch submission and review screens
+- verification flows
+- admin screens that are part of the product UI
+
+Internal code, schema names, and implementation details do not need to be written in Vietnamese.
+
 ## 4. Primary user roles
 
 ### 4.1 Journalist
@@ -256,6 +275,8 @@ The exact provider rollout can be staged during implementation, but the product 
 
 ## 14. MVP feature scope
 
+All user-facing MVP features should be presented in Vietnamese in site copy, navigation, labels, helper text, validation messages, and workflow content.
+
 ### 14.1 Journalist features
 Must-have MVP features:
 - account registration and login
@@ -308,6 +329,8 @@ Strapi must not become the system of record for:
 - verification states
 - reputation metrics
 
+Any CMS-managed public content for the MVP should also be published in Vietnamese by default.
+
 ## 16. Technical direction
 
 The current planned stack is:
@@ -316,6 +339,11 @@ The current planned stack is:
 - Next.js
 - TypeScript
 - Tailwind CSS
+
+### Frontend product presentation
+- the public site URL structure should support a Vietnamese-first product experience
+- front-facing routes, page content, and user-visible product copy should launch in Vietnamese
+- if multilingual support is added later, Vietnamese remains the MVP default and first priority
 
 ### Backend
 - FastAPI
@@ -341,17 +369,21 @@ Planned infrastructure direction:
 - Cloudflare
 - Cloudflare Tunnel
 - Nginx reverse proxy
-- Dockerized services for frontend, API, worker, Redis, Strapi, and related components
+- Docker Compose as the standard deployment model for the full stack
+- Docker Compose managed services for frontend, API, worker, Redis, Strapi, Nginx, and related components
 - PostgreSQL hosted separately on the existing Raspberry Pi Docker environment
 
-This direction is acceptable for planning, but implementation details can be refined later.
+The MVP should be designed so both local development and production deployment run through Docker Compose, using shared base services plus environment-specific overrides where needed.
+
+This direction is acceptable for planning, but exact Compose file layout, service definitions, volumes, networks, and environment handling can be refined later.
 
 ## 18. Environment and repository expectations
 
 The repository should eventually include:
 - `.env.example` committed with safe example values
 - `.env.local` ignored for local development
-- dockerized local development and deployment setup where practical
+- Docker Compose files for shared, development, and production deployment
+- dockerized local development and deployment setup aligned with the Compose deployment model
 
 ## 19. Security requirements
 

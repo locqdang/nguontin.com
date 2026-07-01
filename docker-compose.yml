@@ -1,0 +1,9 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: nguontin-frontend
+    ports:
+      - "3007:3000"
+    restart: unless-stopped
