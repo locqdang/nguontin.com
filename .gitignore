@@ -3,3 +3,7 @@ frontend/.next/
 frontend/playwright-report/
 frontend/test-results/
 frontend/coverage/
+backend/__pycache__/
+backend/.pytest_cache/
+backend/.mypy_cache/
+backend/.venv/

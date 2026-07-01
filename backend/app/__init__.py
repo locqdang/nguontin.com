@@ -1,0 +1,1 @@
+"""NguonTin backend application package."""

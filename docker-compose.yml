@@ -8,3 +8,13 @@ services:
     ports:
       - "3007:3000"
     restart: unless-stopped
+
+  backend:
+    # Minimal FastAPI backend scaffold for Phase C. Container listens on 8000, host exposes 8008 to avoid local port conflicts.
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nguontin-backend
+    ports:
+      - "8008:8000"
+    restart: unless-stopped
