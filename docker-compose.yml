@@ -1,20 +1,33 @@
 services:
   frontend:
-    # Placeholder public homepage for Phase A. Container listens on 3000, host exposes 3007.
+    # Homepage app. Uses INTERNAL_API_BASE_URL for container-to-container calls and NEXT_PUBLIC_API_BASE_URL for browser-visible references.
     build:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: nguontin-frontend
+    env_file:
+      - .env
+    environment:
+      INTERNAL_API_BASE_URL: ${INTERNAL_API_BASE_URL:-http://backend:8000}
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://127.0.0.1:8008}
     ports:
-      - "3007:3000"
+      - "${FRONTEND_PORT:-3007}:3000"
+    depends_on:
+      - backend
     restart: unless-stopped
 
   backend:
-    # Minimal FastAPI backend scaffold for Phase C. Container listens on 8000, host exposes 8008 to avoid local port conflicts.
+    # Minimal FastAPI backend scaffold for Phase C. Service name stays `backend` so Compose DNS is stable.
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: nguontin-backend
+    env_file:
+      - .env
+    environment:
+      APP_NAME: ${APP_NAME:-NguonTin API}
+      APP_ENV: ${APP_ENV:-development}
+      APP_VERSION: ${APP_VERSION:-0.1.0}
     ports:
-      - "8008:8000"
+      - "${BACKEND_PORT:-8008}:8000"
     restart: unless-stopped

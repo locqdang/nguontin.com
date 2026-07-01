@@ -20,6 +20,7 @@ NguonTin is an early Vietnamese-first homepage prototype for a journalist-to-exp
 From the repo root:
 
 ```bash
+cp .env.example .env
 docker compose up --build
 ```
 
@@ -29,6 +30,8 @@ Then open:
 Frontend: http://127.0.0.1:3007
 Backend health: http://127.0.0.1:8008/health
 ```
+
+The homepage now includes a backend API status block. Inside Compose, the frontend reaches the backend through the stable service name `backend` via `INTERNAL_API_BASE_URL=http://backend:8000`.
 
 Validate the Compose file:
 
