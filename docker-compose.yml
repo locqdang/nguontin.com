@@ -1,5 +1,6 @@
 services:
   frontend:
+    # Placeholder public homepage for Phase A. Container listens on 3000, host exposes 3007.
     build:
       context: ./frontend
       dockerfile: Dockerfile

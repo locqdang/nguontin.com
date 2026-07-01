@@ -339,6 +339,8 @@ The current planned stack is:
 - Next.js
 - TypeScript
 - Tailwind CSS
+- Vitest for unit and integration tests
+- Playwright for end-to-end browser tests
 
 ### Frontend product presentation
 - the public site URL structure should support a Vietnamese-first product experience

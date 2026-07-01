@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 const trustSignals = [
   'Hồ sơ chuyên gia có thông tin xác minh rõ ràng',
   'Yêu cầu tìm nguồn và phản hồi được sắp xếp gọn gàng',
@@ -8,6 +10,16 @@ export default function HomePage() {
   return (
     <main className="home-page">
       <section className="hero">
+        <div className="logoWrap">
+          <Image
+            src="/nguontin-logo.svg"
+            alt="NguonTin logo"
+            width={220}
+            height={72}
+            priority
+            className="heroLogo"
+          />
+        </div>
         <p className="eyebrow">NguonTin</p>
         <h1>Nơi nhà báo tìm đúng chuyên gia, nhanh hơn và đáng tin hơn</h1>
         <p className="intro">

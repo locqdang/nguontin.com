@@ -72,21 +72,29 @@ These phases are ordered. Do not skip ahead unless a later phase is intentionall
 **Tasks:**
 
 ### Task A1: Clean the current app file set
-**Deliverable:** homepage files are intentional and basic project ignores are correct.
+**Deliverable:** homepage files are intentional, the frontend test baseline exists, and basic project ignores are correct.
 
 **Files:**
 - Review: `frontend/app/page.tsx`
 - Review: `frontend/app/layout.tsx`
 - Review: `frontend/app/globals.css`
+- Create or review: `frontend/vitest.config.mjs`
+- Create or review: `frontend/playwright.config.js`
+- Create or review: `frontend/app/page.test.tsx`
+- Create or review: `frontend/e2e/home.spec.js`
 - Review: `.gitignore`
 - Review: `.dockerignore`
 
 **Verify:**
 ```bash
 git status --short
+cd frontend && npm run test
+cd frontend && npm run test:e2e
 ```
 Expected:
 - build artifacts and dependencies should not be newly tracked by mistake
+- the Vitest baseline passes
+- the Playwright homepage smoke test passes
 
 ### Task A2: Add the logo to the homepage
 **Deliverable:** one logo appears cleanly on the homepage.

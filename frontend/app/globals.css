@@ -48,6 +48,22 @@ a {
   box-shadow: var(--shadow);
 }
 
+.logoWrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  border: 1px solid rgba(122, 63, 23, 0.12);
+  border-radius: 20px;
+  background: rgba(255, 251, 246, 0.82);
+}
+
+.heroLogo {
+  width: auto;
+  height: 56px;
+}
+
 .eyebrow {
   margin: 0 0 16px;
   color: var(--accent);
@@ -150,6 +166,10 @@ a {
   .card {
     padding: 24px;
     border-radius: 24px;
+  }
+
+  .heroLogo {
+    height: 48px;
   }
 
   .hero h1 {
