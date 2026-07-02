@@ -145,6 +145,58 @@ USER_MIGRATIONS = {
 }
 
 
+def _rebuild_users_table_for_passwordless_auth(cursor: sqlite3.Cursor) -> None:
+    cursor.executescript(
+        """
+        ALTER TABLE users RENAME TO users_legacy_password_hash;
+
+        CREATE TABLE users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT NOT NULL UNIQUE,
+            password_hash TEXT,
+            role TEXT NOT NULL CHECK (role IN ('journalist', 'expert', 'admin')),
+            full_name TEXT,
+            auth_preference TEXT NOT NULL DEFAULT 'email_login',
+            email_verified_at TEXT,
+            verification_status TEXT NOT NULL DEFAULT 'not_started'
+                CHECK (verification_status IN ('not_started', 'pending', 'approved', 'rejected')),
+            verification_method_label TEXT,
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+
+        INSERT INTO users (
+            id,
+            email,
+            password_hash,
+            role,
+            full_name,
+            auth_preference,
+            email_verified_at,
+            verification_status,
+            verification_method_label,
+            created_at,
+            updated_at
+        )
+        SELECT
+            id,
+            email,
+            password_hash,
+            role,
+            full_name,
+            COALESCE(auth_preference, 'email_login'),
+            email_verified_at,
+            verification_status,
+            verification_method_label,
+            created_at,
+            updated_at
+        FROM users_legacy_password_hash;
+
+        DROP TABLE users_legacy_password_hash;
+        """
+    )
+
+
 def _database_path() -> Path:
     path = Path(settings.database_path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -191,6 +243,11 @@ def _run_user_table_migrations(cursor: sqlite3.Cursor) -> None:
     for column_name, statement in USER_MIGRATIONS.items():
         if column_name not in existing_columns:
             cursor.execute(statement)
+
+    password_hash_info = cursor.execute("PRAGMA table_info(users)").fetchall()
+    password_hash_column = next((row for row in password_hash_info if row[1] == "password_hash"), None)
+    if password_hash_column is not None and password_hash_column[3] == 1:
+        _rebuild_users_table_for_passwordless_auth(cursor)
 
 
 def init_db() -> None:

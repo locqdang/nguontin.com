@@ -11,3 +11,4 @@ backend/.venv/
 backend/*.egg-info/
 data/
 .env
+.env.local

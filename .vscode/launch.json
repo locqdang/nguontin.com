@@ -2,11 +2,17 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "NguonTin frontend: debug full stack",
+      "name": "NguonTin frontend: launch browser debug",
       "type": "node-terminal",
       "request": "launch",
       "command": "npm run dev -- --hostname 127.0.0.1 --port 3001",
       "cwd": "${workspaceFolder}/frontend",
+      "env": {
+        "NEXT_PUBLIC_API_BASE_URL": "http://127.0.0.1:8010",
+        "NEXT_PUBLIC_FRONTEND_URL": "http://127.0.0.1:3001",
+        "FRONTEND_BASE_URL": "http://127.0.0.1:3001",
+        "APP_ENV": "development"
+      },
       "serverReadyAction": {
         "pattern": "- Local:\\s+(https?://.+)",
         "uriFormat": "%s",
@@ -20,6 +26,12 @@
       "cwd": "${workspaceFolder}/frontend",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--", "--hostname", "127.0.0.1", "--port", "3001"],
+      "env": {
+        "NEXT_PUBLIC_API_BASE_URL": "http://127.0.0.1:8010",
+        "NEXT_PUBLIC_FRONTEND_URL": "http://127.0.0.1:3001",
+        "FRONTEND_BASE_URL": "http://127.0.0.1:3001",
+        "APP_ENV": "development"
+      },
       "console": "integratedTerminal",
       "skipFiles": ["<node_internals>/**"]
     },
@@ -32,6 +44,35 @@
       "runtimeArgs": ["playwright", "test", "${relativeFile}"],
       "console": "integratedTerminal",
       "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "NguonTin backend: debug FastAPI",
+      "type": "debugpy",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/backend",
+      "python": "${workspaceFolder}/backend/.venv/bin/python",
+      "module": "uvicorn",
+      "args": [
+        "app.main:app",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8010",
+        "--reload"
+      ],
+      "envFile": "${workspaceFolder}/.env.local",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    }
+  ],
+  "compounds": [
+    {
+      "name": "NguonTin full stack: frontend + backend",
+      "configurations": [
+        "NguonTin frontend: launch browser debug",
+        "NguonTin backend: debug FastAPI"
+      ],
+      "stopAll": true
     }
   ]
 }

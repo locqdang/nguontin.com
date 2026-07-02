@@ -104,3 +104,77 @@ def test_profile_requires_authentication() -> None:
     response = client.get("/profiles/journalist")
 
     assert response.status_code == 401
+
+
+def test_expert_can_create_and_read_own_profile() -> None:
+    client, _database_path = _make_client()
+    user = create_user(
+        email="expert.profile@example.com",
+        role="expert",
+        full_name="Chuyên gia Bình",
+    )
+    token = create_access_token(str(user["id"]), {"role": user["role"]})
+
+    update_response = client.patch(
+        "/profiles/expert",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "full_name": "TS. Bình Nguyễn",
+            "headline": "Chuyên gia kinh tế số",
+            "organization_name": "Viện Nghiên cứu Dữ liệu",
+            "job_title": "Giám đốc nghiên cứu",
+            "specialties": ["Kinh tế số", "AI", "Chính sách công nghệ"],
+            "bio": "Tư vấn chiến lược chuyển đổi số cho doanh nghiệp và cơ quan báo chí.",
+            "region": "Hà Nội",
+            "contact_note": "Có thể phản hồi nhanh trong ngày nếu đề tài phù hợp.",
+        },
+    )
+    assert update_response.status_code == 200
+    assert update_response.json()["full_name"] == "TS. Bình Nguyễn"
+    assert update_response.json()["headline"] == "Chuyên gia kinh tế số"
+    assert update_response.json()["specialties"] == ["Kinh tế số", "AI", "Chính sách công nghệ"]
+
+    get_response = client.get(
+        "/profiles/expert",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert get_response.status_code == 200
+    payload = get_response.json()
+    assert payload["user_id"] == user["id"]
+    assert payload["organization_name"] == "Viện Nghiên cứu Dữ liệu"
+    assert payload["job_title"] == "Giám đốc nghiên cứu"
+
+
+def test_expert_profile_returns_not_found_before_creation() -> None:
+    client, _database_path = _make_client()
+    user = create_user(
+        email="expert.notfound@example.com",
+        role="expert",
+        full_name="Chuyên gia Chưa Có Hồ Sơ",
+    )
+    token = create_access_token(str(user["id"]), {"role": user["role"]})
+
+    response = client.get(
+        "/profiles/expert",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 404
+
+
+def test_journalist_cannot_manage_expert_profile() -> None:
+    client, _database_path = _make_client()
+    user = create_user(
+        email="journalist.profile@example.com",
+        role="journalist",
+        full_name="Phóng viên C",
+    )
+    token = create_access_token(str(user["id"]), {"role": user["role"]})
+
+    response = client.patch(
+        "/profiles/expert",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"full_name": "Phóng viên C"},
+    )
+
+    assert response.status_code == 403

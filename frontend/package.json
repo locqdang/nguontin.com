@@ -3,17 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --hostname 0.0.0.0 --port 3000",
-    "build": "next build",
-    "start": "next start --hostname 0.0.0.0 --port 3000",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "test": "vitest run",
-    "test:unit": "vitest run --exclude=\"**/*.integration.test.*\"",
-    "test:integration": "vitest run integration.test",
-    "test:e2e": "playwright test"
+    "dev": "dotenv -e ../.env -e ../.env.local -- next dev --hostname 0.0.0.0 --port 3000",
+    "build": "dotenv -e ../.env -e ../.env.local -- next build",
+    "start": "dotenv -e ../.env -e ../.env.local -- next start --hostname 0.0.0.0 --port 3000",
+    "lint": "dotenv -e ../.env -e ../.env.local -- eslint .",
+    "lint:fix": "dotenv -e ../.env -e ../.env.local -- eslint . --fix",
+    "test": "dotenv -e ../.env -e ../.env.local -- vitest run",
+    "test:unit": "dotenv -e ../.env -e ../.env.local -- vitest run --exclude=\"**/*.integration.test.*\"",
+    "test:integration": "dotenv -e ../.env -e ../.env.local -- vitest run integration.test",
+    "test:e2e": "dotenv -e ../.env -e ../.env.local -- playwright test"
   },
   "dependencies": {
+    "dotenv-cli": "^11.0.0",
     "next": "16.2.9",
     "react": "19.2.7",
     "react-dom": "19.2.7"

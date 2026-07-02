@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from app.core.db import db_cursor
@@ -105,6 +106,110 @@ def get_journalist_profile(*, user_id: int) -> dict[str, Any] | None:
         "full_name": user.get("full_name") or "",
         "outlet_name": profile.get("organization"),
         "beat": profile.get("beat"),
+        "bio": profile.get("bio"),
+        "region": profile.get("city"),
+        "contact_note": profile.get("contact_note"),
+    }
+
+
+def upsert_expert_profile(
+    *,
+    user_id: int,
+    full_name: str,
+    headline: str | None,
+    organization_name: str | None,
+    job_title: str | None,
+    specialties: list[str],
+    bio: str | None,
+    region: str | None,
+    contact_note: str | None,
+) -> dict[str, Any]:
+    user = get_user_by_id(user_id)
+    if user is None:
+        raise RuntimeError("Cannot create profile for a missing user")
+    if user["role"] != UserRole.EXPERT.value:
+        raise ValueError("Only expert accounts can manage an expert profile")
+
+    normalized_headline = headline.strip() if headline else None
+    normalized_organization_name = organization_name.strip() if organization_name else None
+    normalized_job_title = job_title.strip() if job_title else None
+    normalized_specialties = [topic.strip() for topic in specialties if topic.strip()]
+    normalized_bio = bio.strip() if bio else None
+    normalized_region = region.strip() if region else None
+    normalized_contact_note = contact_note.strip() if contact_note else None
+
+    with db_cursor(commit=True) as cursor:
+        cursor.execute(
+            """
+            INSERT INTO profiles (
+                user_id,
+                role,
+                headline,
+                organization,
+                beat,
+                expertise_topics,
+                bio,
+                city,
+                contact_note
+            ) VALUES (?, 'expert', ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(user_id) DO UPDATE SET
+                headline = excluded.headline,
+                organization = excluded.organization,
+                beat = excluded.beat,
+                expertise_topics = excluded.expertise_topics,
+                bio = excluded.bio,
+                city = excluded.city,
+                contact_note = excluded.contact_note,
+                updated_at = CURRENT_TIMESTAMP
+            """,
+            (
+                user_id,
+                normalized_headline,
+                normalized_organization_name,
+                normalized_job_title,
+                json.dumps(normalized_specialties, ensure_ascii=False),
+                normalized_bio,
+                normalized_region,
+                normalized_contact_note,
+            ),
+        )
+        cursor.execute(
+            """
+            UPDATE users
+            SET full_name = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+            """,
+            (full_name.strip(), user_id),
+        )
+
+    profile = get_expert_profile(user_id=user_id)
+    if profile is None:
+        raise RuntimeError("Created expert profile could not be reloaded")
+    return profile
+
+
+def get_expert_profile(*, user_id: int) -> dict[str, Any] | None:
+    user = get_user_by_id(user_id)
+    if user is None:
+        return None
+
+    profile = get_profile_by_user_id(user_id=user_id, role=UserRole.EXPERT.value)
+    if profile is None:
+        return None
+
+    specialties_raw = profile.get("expertise_topics")
+    specialties: list[str] = []
+    if specialties_raw:
+        specialties = [str(topic) for topic in json.loads(specialties_raw)]
+
+    return {
+        "user_id": user_id,
+        "role": UserRole.EXPERT.value,
+        "full_name": user.get("full_name") or "",
+        "headline": profile.get("headline"),
+        "organization_name": profile.get("organization"),
+        "job_title": profile.get("beat"),
+        "specialties": specialties,
         "bio": profile.get("bio"),
         "region": profile.get("city"),
         "contact_note": profile.get("contact_note"),

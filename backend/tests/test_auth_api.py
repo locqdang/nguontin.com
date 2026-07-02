@@ -18,6 +18,8 @@ def _make_client() -> tuple[TestClient, str]:
     os.environ["JWT_SECRET"] = "test-secret"
     settings.database_path = database_path
     settings.jwt_secret = "test-secret"
+    settings.n8n_email_login_webhook_url = ""
+    settings.n8n_email_login_webhook_secret = ""
 
     from app.main import app
     from app.core.db import init_db
@@ -141,6 +143,61 @@ def test_register_rejects_duplicate_email() -> None:
     )
 
     assert response.status_code == 409
+
+
+def test_register_verify_works_with_legacy_password_hash_not_null_schema() -> None:
+    client, database_path = _make_client()
+
+    import sqlite3
+    from app.core.db import init_db
+
+    connection = sqlite3.connect(database_path)
+    try:
+        cursor = connection.cursor()
+        cursor.executescript(
+            """
+            DROP TABLE users;
+            CREATE TABLE users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT NOT NULL UNIQUE,
+                password_hash TEXT NOT NULL,
+                role TEXT NOT NULL CHECK (role IN ('journalist', 'expert', 'admin')),
+                full_name TEXT,
+                verification_status TEXT NOT NULL DEFAULT 'not_started'
+                    CHECK (verification_status IN ('not_started', 'pending', 'approved', 'rejected')),
+                verification_method_label TEXT,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                auth_preference TEXT NOT NULL DEFAULT 'email_login',
+                email_verified_at TEXT
+            );
+            """
+        )
+        connection.commit()
+    finally:
+        connection.close()
+
+    init_db()
+
+    response = client.post(
+        "/auth/register",
+        json={
+            "email": "legacy@example.com",
+            "role": "expert",
+            "full_name": "Legacy Expert",
+        },
+    )
+
+    assert response.status_code == 202
+    code = response.json()["dev_login_code"]
+
+    verify_response = client.post(
+        "/auth/email/verify",
+        json={"email": "legacy@example.com", "code": code},
+    )
+
+    assert verify_response.status_code == 200
+    assert verify_response.json()["user"]["email"] == "legacy@example.com"
 
 
 def test_register_requires_role_and_full_name() -> None:

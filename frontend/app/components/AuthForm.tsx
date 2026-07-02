@@ -14,10 +14,6 @@ function resolveApiBaseUrl() {
     return 'https://api.nguontin.com';
   }
 
-  if (process.env.NODE_ENV === 'development') {
-    return 'http://127.0.0.1:8008';
-  }
-
   return '';
 }
 

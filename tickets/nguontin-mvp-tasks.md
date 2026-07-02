@@ -67,8 +67,9 @@ These phases are ordered. Do not skip ahead unless a later phase is intentionall
 - Phase F complete and pushed
 - Phase G complete and pushed (`feat: finish Phase G auth screens`)
 - Phase H is now split and tracked through subphases H1 to H4
-- Phase H1 targets only the journalist profile backend slice: API route, persistence wiring, and backend tests
-- After H1 is pushed, continue with Phase H2 before starting any verification workflow work from Phase I
+- Phase H1 complete and pushed (`feat: finish Phase H1 journalist profile backend`)
+- Phase H2 targets only the expert profile backend slice: API route, persistence wiring, and backend tests
+- After H2 is pushed, continue with Phase H3 before starting any verification workflow work from Phase I
 
 ---
 
