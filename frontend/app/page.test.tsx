@@ -15,4 +15,5 @@ describe('HomePage', () => {
     expect(html).not.toContain('Tiếp tục với SSO');
     expect(html).toContain('Tìm hiểu cách hoạt động');
   });
+
 });

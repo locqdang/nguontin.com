@@ -13,7 +13,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi">
-      <body>{children}</body>
+      <body>
+        <div className="siteShell">
+          <div className="siteContent">{children}</div>
+          <footer className="siteFooter">
+            <div className="siteFooterInner">
+              <p className="siteFooterBrand">NguonTin</p>
+              <nav aria-label="Liên kết pháp lý" className="siteFooterNav">
+                <a href="/privacy">Chính sách quyền riêng tư</a>
+                <a href="/terms">Điều khoản sử dụng</a>
+              </nav>
+            </div>
+          </footer>
+        </div>
+      </body>
     </html>
   );
 }
