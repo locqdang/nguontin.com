@@ -150,12 +150,12 @@ Deferred entity:
 | --- | --- | --- | --- |
 | id | uuid | yes | primary key |
 | email | citext or varchar | yes | unique, normalized lowercase |
-| password_hash | varchar | yes | Argon2 hash |
 | display_name | varchar | yes | human name for the account |
+| auth_preference | enum | yes | `email_login`, `google_sso`, `linkedin_sso`, or another approved provider key |
 | user_status | enum | yes | `active`, `suspended`, `deactivated` |
 | primary_language | varchar | yes | default `vi` for MVP unless user chooses otherwise later |
 | last_login_at | timestamptz | no | operational field |
-| email_verified_at | timestamptz | no | optional if email confirmation is added later |
+| email_verified_at | timestamptz | no | set after successful email login verification or trusted provider confirmation |
 | created_at | timestamptz | yes | |
 | updated_at | timestamptz | yes | |
 
@@ -163,7 +163,7 @@ Deferred entity:
 - owned by the account holder
 - readable by the user and admins
 - mutable by the user for allowed profile-adjacent fields, by admins for moderation state
-- password hash is never returned to frontend clients
+- email login secrets, one-time codes, magic-link tokens, and provider refresh tokens must never be returned to frontend clients
 
 **Relationships:**
 - one-to-many with `user_roles`
@@ -415,7 +415,7 @@ Deferred entity:
 | --- | --- | --- | --- |
 | id | uuid | yes | primary key |
 | actor_user_id | uuid | no | nullable for system events |
-| event_type | varchar | yes | e.g. `user_registered`, `request_created`, `pitch_accepted` |
+| event_type | varchar | yes | e.g. `user_registered`, `email_login_started`, `email_login_verified`, `request_created`, `pitch_accepted` |
 | target_type | varchar | yes | e.g. `user`, `request`, `pitch`, `verification` |
 | target_id | uuid | no | related record id |
 | request_context_id | varchar | no | trace or request id |

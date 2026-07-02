@@ -1,29 +1,31 @@
-"""Security helpers for password hashing and token handling."""
+"""Security helpers for one-time email login codes and JWT access tokens."""
 
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+import hashlib
+import hmac
+import secrets
 from typing import Any
 
 import jwt
-from argon2 import PasswordHasher
-from argon2.exceptions import VerifyMismatchError
 
 from app.core.config import settings
 
 
-password_hasher = PasswordHasher()
+_DIGITS = "0123456789"
 
 
-def hash_password(password: str) -> str:
-    return password_hasher.hash(password)
+def generate_email_login_code(length: int = 6) -> str:
+    return "".join(secrets.choice(_DIGITS) for _ in range(length))
 
 
-def verify_password(password: str, password_hash: str) -> bool:
-    try:
-        return password_hasher.verify(password_hash, password)
-    except VerifyMismatchError:
-        return False
+def hash_email_login_code(code: str) -> str:
+    return hashlib.sha256(code.encode("utf-8")).hexdigest()
+
+
+def verify_email_login_code(code: str, code_hash: str) -> bool:
+    return hmac.compare_digest(hash_email_login_code(code), code_hash)
 
 
 def create_access_token(subject: str, extra_claims: dict[str, Any] | None = None) -> str:

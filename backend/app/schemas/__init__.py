@@ -1,3 +1,21 @@
-from app.schemas.auth import AuthResponse, LoginRequest, RegisterRequest, UserResponse
+from app.schemas.auth import (
+    AuthResponse,
+    EmailStartRequest,
+    EmailStartResponse,
+    EmailVerifyRequest,
+    SsoCallbackRequest,
+    SsoCallbackResponse,
+    SsoStartResponse,
+    UserResponse,
+)
 
-__all__ = ["AuthResponse", "LoginRequest", "RegisterRequest", "UserResponse"]
+__all__ = [
+    "AuthResponse",
+    "EmailStartRequest",
+    "EmailStartResponse",
+    "EmailVerifyRequest",
+    "SsoCallbackRequest",
+    "SsoCallbackResponse",
+    "SsoStartResponse",
+    "UserResponse",
+]

@@ -12,14 +12,27 @@ from app.models.enums import UserRole
 ALLOWED_SELF_SERVICE_ROLES = {UserRole.JOURNALIST.value, UserRole.EXPERT.value}
 
 
-def create_user(*, email: str, password_hash: str, role: str, full_name: str) -> dict[str, Any]:
+def create_user(
+    *,
+    email: str,
+    role: str,
+    full_name: str,
+    auth_preference: str = "email_login",
+    email_verified_at: str | None = None,
+) -> dict[str, Any]:
     with db_cursor(commit=True) as cursor:
         cursor.execute(
             """
-            INSERT INTO users (email, password_hash, role, full_name)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO users (email, role, full_name, auth_preference, email_verified_at)
+            VALUES (?, ?, ?, ?, ?)
             """,
-            (email.lower().strip(), password_hash, role, full_name.strip()),
+            (
+                email.lower().strip(),
+                role,
+                full_name.strip(),
+                auth_preference,
+                email_verified_at,
+            ),
         )
         user_id = cursor.lastrowid
     if user_id is None:
@@ -28,6 +41,22 @@ def create_user(*, email: str, password_hash: str, role: str, full_name: str) ->
     user = get_user_by_id(user_id)
     if user is None:
         raise RuntimeError("Created user could not be reloaded")
+    return user
+
+
+def update_user_email_verification(*, user_id: int, verified_at: str) -> dict[str, Any]:
+    with db_cursor(commit=True) as cursor:
+        cursor.execute(
+            """
+            UPDATE users
+            SET email_verified_at = ?, auth_preference = 'email_login', updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+            """,
+            (verified_at, user_id),
+        )
+    user = get_user_by_id(user_id)
+    if user is None:
+        raise RuntimeError("Updated user could not be reloaded")
     return user
 
 

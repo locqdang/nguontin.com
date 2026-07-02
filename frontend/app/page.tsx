@@ -28,11 +28,11 @@ export default function HomePage() {
           theo dõi.
         </p>
         <div className="actions">
-          <a
-            className="primaryAction"
-            href="mailto:nguontin.com@gmail.com?subject=NguonTin%20quan%20tam%20som"
-          >
-            Nhận thông tin sớm
+          <a className="primaryAction" href="/register">
+            Tạo tài khoản
+          </a>
+          <a className="secondaryAction" href="/login">
+            Đăng nhập bằng email
           </a>
           <a className="secondaryAction" href="#how-it-works">
             Tìm hiểu cách hoạt động

@@ -14,14 +14,31 @@ USER_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT NOT NULL UNIQUE,
-    password_hash TEXT NOT NULL,
+    password_hash TEXT,
     role TEXT NOT NULL CHECK (role IN ('journalist', 'expert', 'admin')),
     full_name TEXT,
+    auth_preference TEXT NOT NULL DEFAULT 'email_login',
+    email_verified_at TEXT,
     verification_status TEXT NOT NULL DEFAULT 'not_started'
         CHECK (verification_status IN ('not_started', 'pending', 'approved', 'rejected')),
     verification_method_label TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+"""
+
+
+EMAIL_LOGIN_CHALLENGES_TABLE_SQL = """
+CREATE TABLE IF NOT EXISTS email_login_challenges (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL,
+    code_hash TEXT NOT NULL,
+    intended_role TEXT CHECK (intended_role IN ('journalist', 'expert', 'admin')),
+    intended_full_name TEXT,
+    auth_flow TEXT NOT NULL CHECK (auth_flow IN ('login', 'register')),
+    expires_at TEXT NOT NULL,
+    consumed_at TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 """
 
@@ -112,12 +129,20 @@ CREATE TABLE IF NOT EXISTS moderation_actions (
 
 DATABASE_TABLES = [
     USER_TABLE_SQL,
+    EMAIL_LOGIN_CHALLENGES_TABLE_SQL,
     PROFILE_TABLE_SQL,
     VERIFICATION_TABLE_SQL,
     REQUESTS_TABLE_SQL,
     PITCHES_TABLE_SQL,
     MODERATION_TABLE_SQL,
 ]
+
+
+USER_MIGRATIONS = {
+    "password_hash": "ALTER TABLE users ADD COLUMN password_hash TEXT",
+    "auth_preference": "ALTER TABLE users ADD COLUMN auth_preference TEXT NOT NULL DEFAULT 'email_login'",
+    "email_verified_at": "ALTER TABLE users ADD COLUMN email_verified_at TEXT",
+}
 
 
 def _database_path() -> Path:
@@ -145,12 +170,36 @@ def db_cursor(commit: bool = False) -> Iterator[sqlite3.Cursor]:
         connection.close()
 
 
+def _table_exists(cursor: sqlite3.Cursor, table_name: str) -> bool:
+    row = cursor.execute(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+        (table_name,),
+    ).fetchone()
+    return row is not None
+
+
+def _existing_columns(cursor: sqlite3.Cursor, table_name: str) -> set[str]:
+    rows = cursor.execute(f"PRAGMA table_info({table_name})").fetchall()
+    return {row[1] for row in rows}
+
+
+def _run_user_table_migrations(cursor: sqlite3.Cursor) -> None:
+    if not _table_exists(cursor, "users"):
+        return
+
+    existing_columns = _existing_columns(cursor, "users")
+    for column_name, statement in USER_MIGRATIONS.items():
+        if column_name not in existing_columns:
+            cursor.execute(statement)
+
+
 def init_db() -> None:
     connection = get_connection()
     try:
         cursor = connection.cursor()
         for statement in DATABASE_TABLES:
             cursor.execute(statement)
+        _run_user_table_migrations(cursor)
         connection.commit()
     finally:
         connection.close()

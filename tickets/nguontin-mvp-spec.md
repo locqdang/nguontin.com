@@ -2,7 +2,7 @@
 
 **Project:** NguonTin
 **Status:** Draft approved for planning
-**Version:** 1.0
+**Version:** 1.1
 **Last updated:** 2026-07-01
 
 ## 1. Product summary
@@ -64,7 +64,7 @@ Internal code, schema names, and implementation details do not need to be writte
 
 ### 4.1 Journalist
 A journalist can:
-- register and log in
+- create an account and sign in through passwordless email login or approved SSO
 - create a journalist profile
 - complete identity verification
 - create and manage source requests
@@ -74,7 +74,7 @@ A journalist can:
 
 ### 4.2 Expert
 An expert can:
-- register and log in
+- create an account and sign in through passwordless email login or approved SSO
 - create an expert profile
 - complete identity verification
 - browse open journalist requests
@@ -116,7 +116,7 @@ These can be revisited after MVP validation.
 
 ### 7.1 Journalist request workflow
 A journalist should be able to:
-1. register and authenticate
+1. create an account, then authenticate through passwordless email login or approved SSO
 2. create a profile
 3. complete or begin verification
 4. create a source request
@@ -126,7 +126,7 @@ A journalist should be able to:
 
 ### 7.2 Expert response workflow
 An expert should be able to:
-1. register and authenticate
+1. create an account, then authenticate through passwordless email login or approved SSO
 2. create a profile
 3. complete or begin verification
 4. browse and filter open requests
@@ -266,12 +266,30 @@ Later versions may include:
 ## 13. Authentication and account access
 
 The product should support these authentication methods:
-- email and password
+- passwordless email login, for example magic links or one-time codes sent to the user's email
 - Google OAuth
-- Facebook OAuth
 - LinkedIn OAuth
+- other approved SSO providers added later if launch needs justify them
 
-The exact provider rollout can be staged during implementation, but the product direction should support these methods.
+The exact provider rollout can be staged during implementation, but the MVP direction is clear: no password login, email login plus SSO only.
+
+### 13.1 Google OAuth verification requirement
+Because Google OAuth verification requires clear public legal disclosures, the MVP public site must include:
+- a public Privacy Policy page
+- a public Terms of Service page
+- stable footer or equivalent public navigation links to both pages
+- production URLs that can be submitted in the Google Auth consent-screen verification flow
+
+These pages are not optional if Google OAuth is part of the launch auth set.
+
+The legal pages should at minimum explain:
+- what user data is collected
+- how sign-in data and profile data are used
+- how verification evidence is handled
+- whether the product sends platform emails or notifications
+- how users can contact the operator about privacy or account concerns
+
+The implementation can start with founder-reviewed baseline legal copy, but the routes must exist publicly before Google OAuth launch verification is attempted.
 
 ## 14. MVP feature scope
 
@@ -279,7 +297,7 @@ All user-facing MVP features should be presented in Vietnamese in site copy, nav
 
 ### 14.1 Journalist features
 Must-have MVP features:
-- account registration and login
+- account sign-up and sign-in through passwordless email login or approved SSO
 - journalist profile creation
 - journalist verification submission
 - create request
@@ -292,7 +310,7 @@ Must-have MVP features:
 
 ### 14.2 Expert features
 Must-have MVP features:
-- account registration and login
+- account sign-up and sign-in through passwordless email login or approved SSO
 - expert profile creation
 - expert verification submission
 - browse requests
@@ -314,6 +332,8 @@ Must-have MVP features:
 Strapi should be used only for content and marketing pages such as:
 - blog
 - FAQ
+- privacy policy
+- terms of service
 - landing pages
 - documentation
 - SEO pages
@@ -356,8 +376,9 @@ The current planned stack is:
 - Celery for background jobs
 
 ### Authentication and security
-- JWT-based session or API auth
-- Argon2 password hashing
+- passwordless email login, for example magic links or one-time codes
+- SSO providers, starting with the approved launch set
+- JWT-based session or API auth after successful email or SSO authentication
 - rate limiting
 - CAPTCHA
 - audit logs
@@ -391,12 +412,23 @@ The repository should eventually include:
 
 The MVP must include:
 - HTTPS in deployed environments
-- safe password hashing
+- safe passwordless login token handling and expiry controls
+- safe SSO token validation and provider-side callback handling
 - rate limiting on sensitive endpoints
 - CAPTCHA or equivalent abuse reduction where needed
 - audit logs for sensitive admin and verification actions
 - careful handling of uploaded or linked verification evidence
 - server-side authorization checks for all protected actions
+
+## 19.1 Public legal and consent-screen readiness requirements
+
+If Google OAuth is enabled in any environment intended for external testing or launch, the deployed product must also include:
+- a reachable public Privacy Policy URL
+- a reachable public Terms of Service URL
+- consent-screen app information that matches the deployed product name and domain
+- a documented owner contact method shown on the public site or legal pages
+
+Google Auth launch readiness should be blocked until those public URLs exist and return `200 OK`.
 
 ## 20. Observability and operations
 

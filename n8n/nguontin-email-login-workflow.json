@@ -1,0 +1,118 @@
+{
+  "name": "NguonTin Email Login",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "nguontin-email-login",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-node",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "nguontin-email-login"
+    },
+    {
+      "parameters": {
+        "jsCode": "const secret = $env.N8N_NGUONTIN_WEBHOOK_SECRET || '';\nconst headerSecret = $json.headers?.['x-nguontin-webhook-secret'] || $json.headers?.['X-NguonTin-Webhook-Secret'] || '';\nif (secret && headerSecret !== secret) {\n  throw new Error('Invalid webhook secret');\n}\nconst body = $json.body || {};\nconst requiredFields = ['email', 'code', 'auth_flow', 'expires_in_minutes'];\nfor (const field of requiredFields) {\n  if (!body[field]) {\n    throw new Error(`Missing field: ${field}`);\n  }\n}\nreturn [{ json: body }];"
+      },
+      "id": "validate-node",
+      "name": "Validate Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $env.NGUONTIN_FROM_EMAIL }}",
+        "toEmail": "={{ $json.email }}",
+        "subject": "={{ $json.subject || ($json.auth_flow === 'register' ? 'Ma xac thuc tao tai khoan NguonTin' : 'Ma dang nhap NguonTin') }}",
+        "emailType": "text",
+        "message": "={{ $json.message || ('Ma xac thuc cua ban la ' + $json.code + '. Ma nay het han sau ' + $json.expires_in_minutes + ' phut.') }}",
+        "options": {}
+      },
+      "id": "send-email-node",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        800,
+        300
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_WITH_NGUONTIN_GMAIL_CREDENTIAL_ID",
+          "name": "NguonTin Gmail"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"ok\": true,\n  \"email\": $json.email\n}",
+        "options": {}
+      },
+      "id": "response-node",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1080,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Payload": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {},
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "versionId": "nguontin-email-login-v1",
+  "triggerCount": 0,
+  "tags": []
+}

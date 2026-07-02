@@ -6,7 +6,7 @@
 
 **Architecture:** Use a separated app architecture: Next.js for the user-facing web app, FastAPI for application APIs and workflow logic, PostgreSQL as the source of truth for all app data, Redis plus Celery for background jobs, and Strapi only for marketing and content pages. Deploy the full stack with Docker Compose, using environment-specific Compose files or overrides for local development and production. Build the MVP in vertical slices, starting with the core data model and auth, then profile and verification, then requests and pitches, then admin moderation and operational hardening.
 
-**Tech Stack:** Next.js, TypeScript, Tailwind CSS, FastAPI, PostgreSQL, Redis, Celery, JWT auth, Argon2, Docker Compose, Strapi
+**Tech Stack:** Next.js, TypeScript, Tailwind CSS, FastAPI, PostgreSQL, Redis, Celery, JWT auth, passwordless email login, SSO, Docker Compose, Strapi
 
 ---
 
@@ -146,16 +146,16 @@ To keep MVP one shippable, the implementation should make these practical scope 
 
 ### 5.1 Authentication scope
 Implement first:
-- email and password auth
-- JWT-based authenticated sessions or API access
+- passwordless email login, for example magic links or one-time codes
+- JWT-based authenticated sessions or API access after successful email or SSO authentication
 - role support for journalist, expert, and admin
+- at least one approved SSO provider, with Google and LinkedIn as the default planning candidates
 
 Defer until later unless clearly needed before launch:
-- Google OAuth
-- Facebook OAuth
-- LinkedIn OAuth
+- additional SSO providers beyond the first approved launch set
+- complex account-linking flows across many providers
 
-Reason: these providers add setup and edge cases, but do not prove the core marketplace workflow.
+Reason: password login is intentionally out of scope, and the launch direction is email login plus SSO only.
 
 ### 5.2 Verification scope
 Implement first:
@@ -243,8 +243,11 @@ The backend should be built around workflow-first API groups.
 
 ### 7.1 Auth APIs
 Examples:
-- `POST /auth/register`
-- `POST /auth/login`
+- `POST /auth/register` for new account creation after email or SSO identity confirmation
+- `POST /auth/email/start`
+- `POST /auth/email/verify`
+- `GET /auth/sso/{provider}/start`
+- `GET /auth/sso/{provider}/callback`
 - `POST /auth/refresh` if refresh tokens are used
 - `POST /auth/logout`
 - `GET /me`
@@ -298,6 +301,8 @@ The frontend should be organized by user workflow, not by raw entity names alone
 - `/blog`
 - `/login`
 - `/register`
+- `/auth/email`
+- `/auth/sso`
 
 ### 8.2 Journalist app routes
 - `/app/journalist/dashboard`
@@ -358,7 +363,8 @@ The MVP should include:
 Security is part of MVP, not polish.
 
 ### 10.1 Must-have controls
-- Argon2 password hashing
+- signed, time-limited email login tokens or one-time codes
+- strict SSO state, nonce, and callback validation
 - server-side role and ownership checks
 - input validation on all write endpoints
 - file type and size validation for verification uploads
@@ -463,14 +469,14 @@ Exit criteria:
 
 ### Phase 2: Auth and access control
 Deliverables:
-- registration and login
-- password hashing
+- passwordless email login flow
+- at least one approved SSO flow
 - JWT issuance and auth middleware
 - role-aware route guards
 - current-user endpoint
 
 Exit criteria:
-- users can sign up and sign in
+- users can sign up and sign in through email login or SSO
 - role checks are enforced server-side
 
 ### Phase 3: Profiles and verification

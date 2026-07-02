@@ -7,9 +7,6 @@ services:
     container_name: nguontin-frontend
     env_file:
       - .env
-    environment:
-      INTERNAL_API_BASE_URL: ${INTERNAL_API_BASE_URL:-http://backend:8000}
-      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://127.0.0.1:8008}
     ports:
       - "${FRONTEND_PORT:-3007}:3000"
     depends_on:
@@ -24,10 +21,9 @@ services:
     container_name: nguontin-backend
     env_file:
       - .env
-    environment:
-      APP_NAME: ${APP_NAME:-NguonTin API}
-      APP_ENV: ${APP_ENV:-development}
-      APP_VERSION: ${APP_VERSION:-0.1.0}
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    volumes:
+      - ./data:/app/data
     ports:
       - "${BACKEND_PORT:-8008}:8000"
     restart: unless-stopped

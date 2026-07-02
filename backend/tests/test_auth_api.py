@@ -3,10 +3,12 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import tempfile
+from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
+from app.services.users import create_user
 
 
 def _make_client() -> tuple[TestClient, str]:
@@ -24,32 +26,37 @@ def _make_client() -> tuple[TestClient, str]:
     return TestClient(app), database_path
 
 
-def test_register_login_and_me_flow() -> None:
+def test_login_start_verify_and_me_flow() -> None:
     client, _database_path = _make_client()
+    create_user(
+        email="journalist@example.com",
+        role="journalist",
+        full_name="Phóng viên An",
+    )
 
-    register_response = client.post(
-        "/auth/register",
+    start_response = client.post(
+        "/auth/email/start",
         json={
             "email": "journalist@example.com",
-            "password": "nguontin123",
-            "role": "journalist",
-            "full_name": "Phóng viên An",
+            "auth_flow": "login",
         },
     )
-    assert register_response.status_code == 201
-    register_payload = register_response.json()
-    assert register_payload["user"]["role"] == "journalist"
-    assert register_payload["user"]["email"] == "journalist@example.com"
+    assert start_response.status_code == 202
+    code = start_response.json()["dev_login_code"]
 
-    login_response = client.post(
-        "/auth/login",
+    verify_response = client.post(
+        "/auth/email/verify",
         json={
             "email": "journalist@example.com",
-            "password": "nguontin123",
+            "code": code,
         },
     )
-    assert login_response.status_code == 200
-    token = login_response.json()["access_token"]
+    assert verify_response.status_code == 200
+    verify_payload = verify_response.json()
+    assert verify_payload["user"]["role"] == "journalist"
+    assert verify_payload["user"]["email"] == "journalist@example.com"
+    assert verify_payload["user"]["auth_preference"] == "email_login"
+    token = verify_payload["access_token"]
 
     me_response = client.get(
         "/auth/me",
@@ -59,36 +66,139 @@ def test_register_login_and_me_flow() -> None:
     assert me_response.json()["full_name"] == "Phóng viên An"
 
 
-def test_register_rejects_duplicate_email() -> None:
+def test_login_start_rejects_unknown_email() -> None:
     client, _database_path = _make_client()
-    payload = {
-        "email": "dup@example.com",
-        "password": "nguontin123",
-        "role": "expert",
-        "full_name": "Chuyên gia Bình",
-    }
 
-    assert client.post("/auth/register", json=payload).status_code == 201
-    duplicate_response = client.post("/auth/register", json=payload)
-
-    assert duplicate_response.status_code == 409
+    response = client.post(
+        "/auth/email/start",
+        json={"email": "missing@example.com", "auth_flow": "login"},
+    )
+    assert response.status_code == 404
 
 
-def test_login_rejects_invalid_password() -> None:
+def test_login_verify_rejects_invalid_code() -> None:
     client, _database_path = _make_client()
-    client.post(
-        "/auth/register",
-        json={
-            "email": "expert@example.com",
-            "password": "nguontin123",
-            "role": "expert",
-            "full_name": "Chuyên gia C",
-        },
+    create_user(
+        email="expert@example.com",
+        role="expert",
+        full_name="Chuyên gia C",
     )
 
+    login_start = client.post(
+        "/auth/email/start",
+        json={"email": "expert@example.com", "auth_flow": "login"},
+    )
+    assert login_start.status_code == 202
+
     login_response = client.post(
-        "/auth/login",
-        json={"email": "expert@example.com", "password": "sai-sai-sai"},
+        "/auth/email/verify",
+        json={"email": "expert@example.com", "code": "000000"},
     )
 
     assert login_response.status_code == 401
+
+
+def test_register_start_and_verify_create_user() -> None:
+    client, _database_path = _make_client()
+
+    response = client.post(
+        "/auth/register",
+        json={
+            "email": "new@example.com",
+            "role": "expert",
+            "full_name": "Chuyên gia Bình",
+        },
+    )
+
+    assert response.status_code == 202
+    code = response.json()["dev_login_code"]
+
+    verify_response = client.post(
+        "/auth/email/verify",
+        json={"email": "new@example.com", "code": code},
+    )
+
+    assert verify_response.status_code == 200
+    assert verify_response.json()["user"]["role"] == "expert"
+    assert verify_response.json()["user"]["full_name"] == "Chuyên gia Bình"
+
+
+def test_register_rejects_duplicate_email() -> None:
+    client, _database_path = _make_client()
+    create_user(
+        email="dup@example.com",
+        role="journalist",
+        full_name="Phóng viên Trùng",
+    )
+
+    response = client.post(
+        "/auth/register",
+        json={
+            "email": "dup@example.com",
+            "role": "expert",
+            "full_name": "Chuyên gia Bình",
+        },
+    )
+
+    assert response.status_code == 409
+
+
+def test_register_requires_role_and_full_name() -> None:
+    client, _database_path = _make_client()
+
+    response = client.post(
+        "/auth/email/start",
+        json={
+            "email": "new@example.com",
+            "auth_flow": "register",
+        },
+    )
+
+    assert response.status_code == 422
+
+
+def test_login_start_uses_n8n_webhook_when_configured() -> None:
+    client, _database_path = _make_client()
+    create_user(
+        email="mail@example.com",
+        role="journalist",
+        full_name="Nguoi Gui Mail",
+    )
+
+    settings.n8n_email_login_webhook_url = "https://n8n.example.com/webhook/nguontin-email-login"
+    settings.n8n_email_login_webhook_secret = "super-secret"
+
+    with patch("app.api.auth.send_email_login_code") as mock_send_email_login_code:
+        response = client.post(
+            "/auth/email/start",
+            json={
+                "email": "mail@example.com",
+                "auth_flow": "login",
+            },
+        )
+
+    settings.n8n_email_login_webhook_url = ""
+    settings.n8n_email_login_webhook_secret = ""
+
+    assert response.status_code == 202
+    payload = response.json()
+    assert payload["delivery_channel"] == "n8n_email"
+    assert payload["dev_login_code"] is None
+    mock_send_email_login_code.assert_called_once()
+
+
+def test_sso_contract_routes_exist() -> None:
+    client, _database_path = _make_client()
+
+    start_response = client.get("/auth/sso/google/start")
+    assert start_response.status_code == 200
+    start_payload = start_response.json()
+    assert start_payload["provider"] == "google"
+    assert "state=" in start_payload["authorization_url"]
+
+    callback_response = client.get(
+        "/auth/sso/google/callback",
+        params={"code": "provider-code", "state": start_payload["state"]},
+    )
+    assert callback_response.status_code == 200
+    assert callback_response.json()["callback_received"] is True

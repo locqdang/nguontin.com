@@ -41,9 +41,9 @@ A phase is only complete when:
 2. Phase B: define the domain model and DB schema plan
 3. Phase C: scaffold the backend app and health endpoints
 4. Phase D: connect frontend and backend in Compose
-5. Phase E: add auth data model and password utilities
-6. Phase F: implement registration and login API
-7. Phase G: build Vietnamese auth screens
+5. Phase E: add auth identity model and passwordless login foundation
+6. Phase F: implement passwordless email login and SSO auth API
+7. Phase G: build Vietnamese passwordless auth screens
 8. Phase H: add role-aware profiles
 9. Phase I: add verification submission flow
 10. Phase J: add admin verification review flow
@@ -273,7 +273,7 @@ Expected:
 
 ---
 
-## 7. Phase E: add auth data model and password utilities
+## 7. Phase E: add auth identity model and passwordless login foundation
 
 **Objective:** Create the smallest secure auth foundation in the backend.
 
@@ -286,15 +286,15 @@ Expected:
 - model file exists
 - role enum is explicit
 
-### Task E2: Add password hashing utility
-**Deliverable:** Argon2 hashing and verification helper.
+### Task E2: Add email login token or one-time code utility
+**Deliverable:** signed, expiring passwordless email-login helper.
 
 **Verify:**
 ```bash
 pytest backend/tests -q
 ```
 Expected:
-- hashing tests pass
+- email-login token or code tests pass
 
 ### Task E3: Add auth settings and validation
 **Deliverable:** env-driven auth config placeholders exist.
@@ -303,54 +303,63 @@ Expected:
 - app can start with env defaults or documented placeholders
 
 **Session exit criteria:**
-- user credentials can be stored securely
+- user identities can be stored securely
+- email login and SSO implementation can start without password-era assumptions
 
 ---
 
-## 8. Phase F: implement registration and login API
+## 8. Phase F: implement passwordless email login and SSO auth API
 
-**Objective:** Ship the first usable auth API.
+**Objective:** Ship the first usable email login and SSO auth API.
 
 **Tasks:**
 
-### Task F1: Registration endpoint
-**Deliverable:** `POST /auth/register`
+### Task F1: Email login start endpoint
+**Deliverable:** `POST /auth/email/start`
 
 **Verify:**
 ```bash
-curl -X POST http://127.0.0.1:<backend-port>/auth/register ...
+curl -X POST http://127.0.0.1:<backend-port>/auth/email/start ...
 ```
 Expected:
 - success response for valid input
 
-### Task F2: Login endpoint
-**Deliverable:** `POST /auth/login`
+### Task F2: Email login verify endpoint
+**Deliverable:** `POST /auth/email/verify`
 
 **Verify:**
 ```bash
-curl -X POST http://127.0.0.1:<backend-port>/auth/login ...
+curl -X POST http://127.0.0.1:<backend-port>/auth/email/verify ...
 ```
 Expected:
-- token or session response
+- token or session response after valid code or magic-link verification
 
-### Task F3: Current-user endpoint
+### Task F3: SSO start and callback shape
+**Deliverable:** provider routes such as `GET /auth/sso/{provider}/start` and `GET /auth/sso/{provider}/callback`
+
+**Verify:**
+- provider routing, state handling, and callback contract are documented or test-covered without using live production credentials
+- if Google OAuth is in the launch set, required consent-screen inputs are recorded, including Privacy Policy URL and Terms of Service URL
+
+### Task F4: Current-user endpoint
 **Deliverable:** authenticated `GET /me`
 
 **Verify:**
 ```bash
-curl http://127.0.0.1:<backend-port>/me -H 'Authorization: Bearer ...'
+curl http://127.0.0.1:<backend-port>/me -H 'Authorization: Bearer ***'
 ```
 Expected:
 - current user payload
 
 **Session exit criteria:**
-- sign-up and sign-in work locally
+- email sign-in works locally
+- SSO contract is defined and ready for provider integration
 
 ---
 
-## 9. Phase G: build Vietnamese auth screens
+## 9. Phase G: build Vietnamese passwordless auth screens
 
-**Objective:** Add Vietnamese UI for registration and login.
+**Objective:** Add Vietnamese UI for email login and SSO.
 
 **Tasks:**
 
@@ -373,7 +382,7 @@ Expected:
 - routes build and return `200 OK`
 
 **Session exit criteria:**
-- a user can register and log in from the UI in Vietnamese
+- a user can initiate email sign-in or choose an approved SSO provider from the UI in Vietnamese
 
 ---
 
@@ -567,21 +576,27 @@ Expected:
 
 ### Task Q1: Decide whether Strapi is needed before launch
 ### Task Q2: Add FAQ/about pages or placeholder content routes in Vietnamese
-### Task Q3: Add production-shaped Compose overrides
-### Task Q4: Add launch checklist and smoke-test commands
+### Task Q3: Add public Privacy Policy and Terms of Service pages in Vietnamese, with footer or equivalent sitewide links
+### Task Q4: Add production-shaped Compose overrides
+### Task Q5: Add launch checklist and smoke-test commands, including legal-page and Google Auth readiness checks
 
 **Verify:**
 ```bash
 docker compose config
 npm run build
 curl -I http://127.0.0.1:3007
+curl -I http://127.0.0.1:3007/privacy-policy
+curl -I http://127.0.0.1:3007/terms-of-service
 ```
 Expected:
 - production-shaped config is valid
 - site still builds and serves
+- legal pages return `200 OK`
+- Google Auth launch prerequisites are publicly reachable if Google OAuth is enabled
 
 **Session exit criteria:**
 - MVP has a credible public surface and deploy path
+- required legal pages exist before Google OAuth launch verification is attempted
 
 ---
 

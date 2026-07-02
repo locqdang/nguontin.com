@@ -9,4 +9,5 @@ backend/.pytest_cache/
 backend/.mypy_cache/
 backend/.venv/
 backend/*.egg-info/
+data/
 .env
