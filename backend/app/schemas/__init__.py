@@ -8,12 +8,15 @@ from app.schemas.auth import (
     SsoStartResponse,
     UserResponse,
 )
+from app.schemas.profiles import JournalistProfileResponse, JournalistProfileUpdateRequest
 
 __all__ = [
     "AuthResponse",
     "EmailStartRequest",
     "EmailStartResponse",
     "EmailVerifyRequest",
+    "JournalistProfileResponse",
+    "JournalistProfileUpdateRequest",
     "SsoCallbackRequest",
     "SsoCallbackResponse",
     "SsoStartResponse",
