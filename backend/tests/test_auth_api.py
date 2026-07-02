@@ -246,16 +246,52 @@ def test_login_start_uses_n8n_webhook_when_configured() -> None:
 
 def test_sso_contract_routes_exist() -> None:
     client, _database_path = _make_client()
+    settings.google_client_id = "google-client-id"
+    settings.google_client_secret = "google-client-secret"
+    settings.google_oauth_redirect_uri = "https://api.example.com/auth/sso/google/callback"
 
     start_response = client.get("/auth/sso/google/start")
     assert start_response.status_code == 200
     start_payload = start_response.json()
     assert start_payload["provider"] == "google"
+    assert "accounts.google.com" in start_payload["authorization_url"]
     assert "state=" in start_payload["authorization_url"]
 
-    callback_response = client.get(
-        "/auth/sso/google/callback",
-        params={"code": "provider-code", "state": start_payload["state"]},
+    with patch("app.api.auth._complete_google_sso") as mock_complete_google_sso:
+        mock_complete_google_sso.return_value = {
+            "email": "sso@example.com",
+            "full_name": "SSO User",
+            "email_verified_at": "2026-01-01T00:00:00+00:00",
+        }
+        callback_response = client.get(
+            "/auth/sso/google/callback",
+            params={"code": "provider-code", "state": start_payload["state"]},
+            follow_redirects=False,
+        )
+
+    assert callback_response.status_code == 302
+    redirect_location = callback_response.headers["location"]
+    assert "success=0" in redirect_location
+    assert "Vui+l%C3%B2ng+%C4%91%C4%83ng+k%C3%BD+tr%C6%B0%E1%BB%9Bc" in redirect_location
+
+    register_start = client.get(
+        "/auth/sso/google/start",
+        params={"auth_flow": "register", "role": "expert", "full_name": "SSO Expert"},
     )
-    assert callback_response.status_code == 200
-    assert callback_response.json()["callback_received"] is True
+    assert register_start.status_code == 200
+
+    with patch("app.api.auth._complete_google_sso") as mock_complete_google_sso:
+        mock_complete_google_sso.return_value = {
+            "email": "sso-register@example.com",
+            "full_name": "SSO Expert",
+            "email_verified_at": "2026-01-01T00:00:00+00:00",
+        }
+        register_callback = client.get(
+            "/auth/sso/google/callback",
+            params={"code": "provider-code", "state": register_start.json()["state"]},
+            follow_redirects=False,
+        )
+
+    assert register_callback.status_code == 302
+    assert "success=1" in register_callback.headers["location"]
+    assert "access_token=" in register_callback.headers["location"]

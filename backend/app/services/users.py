@@ -60,6 +60,22 @@ def update_user_email_verification(*, user_id: int, verified_at: str) -> dict[st
     return user
 
 
+def update_user_auth(*, user_id: int, auth_preference: str, email_verified_at: str | None = None) -> dict[str, Any]:
+    with db_cursor(commit=True) as cursor:
+        cursor.execute(
+            """
+            UPDATE users
+            SET auth_preference = ?, email_verified_at = COALESCE(?, email_verified_at), updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+            """,
+            (auth_preference, email_verified_at, user_id),
+        )
+    user = get_user_by_id(user_id)
+    if user is None:
+        raise RuntimeError("Updated user could not be reloaded")
+    return user
+
+
 def get_user_by_email(email: str) -> dict[str, Any] | None:
     with db_cursor() as cursor:
         cursor.execute(

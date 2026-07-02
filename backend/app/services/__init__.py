@@ -11,6 +11,7 @@ from app.services.users import (
     ensure_email_available,
     get_user_by_email,
     get_user_by_id,
+    update_user_auth,
 )
 
 __all__ = [
@@ -22,6 +23,7 @@ __all__ = [
     "get_profile_by_user_id",
     "get_user_by_email",
     "get_user_by_id",
+    "update_user_auth",
     "upsert_expert_profile",
     "upsert_journalist_profile",
 ]

@@ -305,6 +305,7 @@ dependencies = [
     { name = "email-validator" },
     { name = "fastapi" },
     { name = "pyjwt" },
+    { name = "python-dotenv" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -322,6 +323,7 @@ requires-dist = [
     { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.28,<1.0" },
     { name = "pyjwt", specifier = ">=2.10,<3.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.4,<9.0" },
+    { name = "python-dotenv", specifier = ">=1.1,<2.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.35,<1.0" },
 ]
 provides-extras = ["dev"]
