@@ -51,10 +51,29 @@ The direct dev server runs on port `3000` by default.
 
 ## Run the backend directly
 
+If you run the backend outside Docker, the backend now loads the repo-root `.env` first and then `.env.local` as an override. That lets local debug use local callback and frontend URLs without changing production-like defaults in `.env`.
+
+### Terminal
+
 ```bash
-cd backend
-python3 -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+cd /home/loc/projects/nguontin.com
+set -a
+. ./.env
+set +a
+uv run --directory backend uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
+
+Note: shell sourcing only works reliably when `.env` values with spaces are quoted, for example `APP_NAME="NguonTin API"`.
+
+### VS Code debug
+
+Use the checked-in launch config:
+
+```text
+.vscode/launch.json → NguonTin Backend (debug)
+```
+
+That debug profile points at `.env.local`, and the backend itself loads `.env` first plus `.env.local` overrides for local debugging values such as `FRONTEND_BASE_URL` and `GOOGLE_OAUTH_REDIRECT_URI`.
 
 Install backend dependencies in a local virtual environment first if you want to run it outside Docker.
 

@@ -59,6 +59,7 @@ export default function AuthForm({ mode = 'login' }: { mode?: AuthMode }) {
   const [pendingCode, setPendingCode] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isStartingSso, setIsStartingSso] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -171,14 +172,27 @@ export default function AuthForm({ mode = 'login' }: { mode?: AuthMode }) {
   async function handleSsoStart(provider: 'google' | 'linkedin') {
     setErrorMessage('');
     setSuccessMessage('');
+    setIsStartingSso(provider);
 
     if (!apiBaseUrl) {
       setErrorMessage('Hệ thống đăng nhập đang thiếu cấu hình máy chủ. Vui lòng liên hệ quản trị viên.');
+      setIsStartingSso(null);
       return;
     }
 
     try {
-      const response = await fetch(`${apiBaseUrl}/auth/sso/${provider}/start`);
+      const params = new URLSearchParams({ auth_flow: mode });
+      if (isRegister) {
+        if (!fullName.trim()) {
+          setErrorMessage('Vui lòng nhập họ và tên trước khi đăng ký bằng SSO.');
+          setIsStartingSso(null);
+          return;
+        }
+        params.set('role', role);
+        params.set('full_name', fullName.trim());
+      }
+
+      const response = await fetch(`${apiBaseUrl}/auth/sso/${provider}/start?${params.toString()}`);
       const payload = (await response.json()) as {
         authorization_url?: string;
         message?: string;
@@ -190,11 +204,11 @@ export default function AuthForm({ mode = 'login' }: { mode?: AuthMode }) {
         return;
       }
 
-      setSuccessMessage(
-        `${payload.message} Liên kết mô phỏng: ${payload.authorization_url}`,
-      );
+      window.location.assign(payload.authorization_url);
     } catch {
       setErrorMessage('Không thể kết nối tới máy chủ. Vui lòng thử lại sau ít phút.');
+    } finally {
+      setIsStartingSso(null);
     }
   }
 
@@ -300,16 +314,20 @@ export default function AuthForm({ mode = 'login' }: { mode?: AuthMode }) {
         <div className="authSsoSection">
           <p className="authSsoHeading">Hoặc tiếp tục với nhà cung cấp SSO</p>
           <div className="authSsoActions">
-            {ssoOptions.map((option) => (
-              <button
-                key={option.value}
-                className="secondaryAction authSsoButton"
-                onClick={() => handleSsoStart(option.value)}
-                type="button"
-              >
-                {option.label}
-              </button>
-            ))}
+            {ssoOptions.map((option) => {
+              const isThisProviderLoading = isStartingSso === option.value;
+              return (
+                <button
+                  key={option.value}
+                  className="secondaryAction authSsoButton"
+                  disabled={Boolean(isStartingSso)}
+                  onClick={() => handleSsoStart(option.value)}
+                  type="button"
+                >
+                  {isThisProviderLoading ? 'Đang chuyển hướng...' : option.label}
+                </button>
+              );
+            })}
           </div>
         </div>
 

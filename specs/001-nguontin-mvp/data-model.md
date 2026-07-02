@@ -1,7 +1,7 @@
 # NguonTin MVP Domain Model and DB Schema Plan
 
 **Project:** NguonTin  
-**Status:** Phase B complete draft for implementation  
+**Status:** Approved MVP data model baseline  
 **Version:** 1.0  
 **Last updated:** 2026-07-01
 
@@ -78,7 +78,7 @@ To keep backend implementation straightforward:
 **Why:**
 - supports LinkedIn, websites, published articles, and professional profiles immediately
 - allows later file uploads without redesigning the table
-- avoids blocking Phase C and Phase I on storage infrastructure decisions
+- avoids blocking backend scaffolding and verification-flow implementation on storage infrastructure decisions
 
 ### 3.3 Organizations in MVP
 **Decision:** dedicated `Organization` table is deferred to later.
@@ -555,7 +555,7 @@ Not allowed for public display by default:
 
 ## 9. Recommended initial PostgreSQL table order
 
-To reduce migration friction, create tables in this order:
+Create tables in this order:
 1. `users`
 2. `user_roles`
 3. `journalist_profiles`
@@ -567,7 +567,7 @@ To reduce migration friction, create tables in this order:
 9. `audit_events`
 10. `moderation_actions`
 
-## 10. Recommended implementation notes for Phase C and Phase E
+## 10. Recommended implementation notes
 
 - Use UUID primary keys across all core tables.
 - Normalize email to lowercase before uniqueness checks.
@@ -590,11 +590,11 @@ These are intentionally deferred so backend scaffolding can stay focused:
 - multilingual schema complexity beyond storing Vietnamese-facing copy in the UI layer
 - public reputation scoring model
 - automated trust scoring
-- binary file storage pipeline as a Phase B blocker
+- binary file storage pipeline as an MVP scaffolding blocker
 - multiple pitch revisions per expert per request
 - public request marketplace browsing
 
-## 12. Phase B verification checklist
+## 12. Verification checklist
 
 This document explicitly covers all required core entities:
 - User
@@ -614,7 +614,7 @@ This document also locks all blocking MVP decisions:
 - role model shape: multi-role via join table
 - status enums: locked in section 3.5
 
-## 13. Session exit conclusion
+## 13. Conclusion
 
 Backend scaffolding can now start without guessing:
 - which tables exist
