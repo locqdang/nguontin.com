@@ -37,6 +37,7 @@ def create_email_login_challenge(
                 expires_at
             )
             VALUES (?, ?, ?, ?, ?, ?)
+            RETURNING id
             """,
             (
                 normalized_email,
@@ -47,7 +48,8 @@ def create_email_login_challenge(
                 expires_at.isoformat(),
             ),
         )
-        challenge_id = cursor.lastrowid
+        inserted = cursor.fetchone()
+        challenge_id = inserted['id'] if inserted is not None else None
 
     return {
         "id": challenge_id,

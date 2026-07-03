@@ -58,7 +58,7 @@ export default function HomePage() {
         </article>
 
         <article className="card">
-          <h2>Vì sao NguonTin khác hơn</h2>
+          <h2>Vì sao NguonTin khác biệt</h2>
           <ul>
             {trustSignals.map((signal) => (
               <li key={signal}>{signal}</li>

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import sqlite3
+from app.core.db import IntegrityError
 from typing import Any
 
 from app.core.db import db_cursor
@@ -25,6 +25,7 @@ def create_user(
             """
             INSERT INTO users (email, role, full_name, auth_preference, email_verified_at)
             VALUES (?, ?, ?, ?, ?)
+            RETURNING id
             """,
             (
                 email.lower().strip(),
@@ -34,7 +35,8 @@ def create_user(
                 email_verified_at,
             ),
         )
-        user_id = cursor.lastrowid
+        inserted = cursor.fetchone()
+        user_id = inserted['id'] if inserted is not None else None
     if user_id is None:
         raise RuntimeError("Created user did not return an id")
 
@@ -95,4 +97,4 @@ def get_user_by_id(user_id: int) -> dict[str, Any] | None:
 
 def ensure_email_available(email: str) -> None:
     if get_user_by_email(email) is not None:
-        raise sqlite3.IntegrityError("email already exists")
+        raise IntegrityError("email already exists")

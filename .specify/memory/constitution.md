@@ -1,50 +1,60 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report
+Version change: 1.0.0 -> 1.1.0
+Modified principles:
+- I. Spec-First Decision Making
+- II. Trust-First Data Ownership
+- III. Vietnamese-First User Experience
+- IV. Minimal MVP with Safety Controls
+- VI. Readable, Intentful Code
+- V. Observable, Recoverable Operations
+Added sections:
+- Project Constraints
+- Development Workflow
+Removed sections:
+- none
+Templates reviewed:
+- .specify/templates/plan-template.md ✅ reviewed
+- .specify/templates/spec-template.md ✅ reviewed
+- .specify/templates/tasks-template.md ✅ reviewed
+- .specify/templates/constitution-template.md ✅ replaced
+Follow-up TODOs:
+- none
+-->
+# NguonTin Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Spec-First Decision Making
+Every feature begins with a written specification, independent acceptance criteria, explicit edge cases, and test-driven validation before implementation begins. This ensures the team moves quickly without sacrificing clarity or introducing hidden scope.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Trust-First Data Ownership
+Core marketplace, verification, and audit data must remain in application-owned storage. External systems may support marketing or content presentation only; they must never become the system of record for trust-sensitive workflows. The project should maximize self-hosted services for core infrastructure and avoid cloud-managed services for trust-sensitive operations whenever possible.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Vietnamese-First User Experience
+Public-facing navigation, labels, validation messages, and workflows must default to Vietnamese. Internal code, schemas, data models, and APIs should remain English to preserve engineering clarity.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Minimal MVP with Safety Controls
+The initial product must deliver the smallest viable trust marketplace loop while enforcing server-side authorization, verification controls, and audit trails. Safety and correctness take priority over feature breadth.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Observable, Recoverable Operations
+Every release must include observability and recoverability: health checks, structured diagnostics, deployment guidance, and clear failure behavior are required before shipping.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+### VI. Readable, Intentful Code
+Code must remain easy to read, with intent comments that explain design choices and safety guards. Complexity should be justified, and the implementation should favor clarity over cleverness.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+## Project Constraints
+The project is scoped as a trust-first Vietnamese marketplace prototype with backend-owned persistence and Docker Compose-based local deployment. PostgreSQL or equivalent application storage is the primary data store for core workflows; Strapi is limited to marketing content only. The project should maximize self-hosted services for core infrastructure and avoid cloud-managed data services for trust-sensitive workflows unless added through an explicit governance amendment.
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
-
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+## Development Workflow
+Feature work follows the `specs/<feature>/` structure, with explicit `spec.md`, `plan.md`, `data-model.md`, and `tasks.md` artifacts. Changes require documented acceptance criteria, edge cases, operational notes, and test-driven implementation. Code should be easy to read, with intent comments for non-obvious decisions. All PRs must reference the relevant feature spec and demonstrate that they preserve the Vietnamese-first public experience and the project’s trust-oriented architecture.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
+This constitution defines the guiding rules for the NguonTin project. It supersedes informal practices and must be consulted before making architectural or product decisions affecting trust, data ownership, localization, or operational readiness.
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+- Amendments require a written rationale, a version increment, and review by the maintainers.
+- Major governance changes require a new principle or the removal of an existing one.
+- Minor clarifications require a patch version update and a note in the constitution file.
+- All PRs should include a brief constitution compliance statement linking to this document.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.1.0 | **Ratified**: 2026-07-02 | **Last Amended**: 2026-07-02

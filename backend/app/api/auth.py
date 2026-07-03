@@ -6,7 +6,7 @@ from datetime import UTC, datetime, timedelta
 import json
 import logging
 import secrets
-import sqlite3
+from app.core.db import IntegrityError
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -306,7 +306,7 @@ def _finalize_sso_user(*, provider: str, sso_identity: dict[str, str | None], st
             auth_preference=auth_preference,
             email_verified_at=verified_at,
         )
-    except sqlite3.IntegrityError as exc:
+    except IntegrityError as exc:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Không thể hoàn tất đăng nhập SSO cho tài khoản này.",
@@ -425,7 +425,7 @@ def email_verify(payload: EmailVerifyRequest) -> AuthResponse:
                 user_id=user["id"],
                 verified_at=challenge["consumed_at"],
             )
-    except sqlite3.IntegrityError as exc:
+    except IntegrityError as exc:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Không thể hoàn tất đăng nhập email cho tài khoản này.",

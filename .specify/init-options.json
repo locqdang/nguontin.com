@@ -1,9 +1,8 @@
 {
-  "ai": "hermes",
-  "ai_skills": true,
+  "ai": "copilot",
   "feature_numbering": "sequential",
   "here": true,
-  "integration": "hermes",
+  "integration": "copilot",
   "script": "sh",
   "speckit_version": "0.12.4"
 }
