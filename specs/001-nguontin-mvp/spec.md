@@ -6,17 +6,17 @@
 
 **Status**: Approved planning baseline
 
-**Input**: User description: "Build the NguonTin MVP as a trust-first, Vietnamese-first platform where journalists create source requests, experts browse and pitch through the platform, and admins review verification and moderate trust-sensitive workflows."
+**Input**: User description: "Build the NguonTin MVP as a trust-first, Vietnamese-first platform where journalists create source requests, experts browse and pitch through the platform, and admins moderate trust-sensitive workflows."
 
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Journalist creates and manages a source request (Priority: P1)
 
-A journalist can sign in without a password, create a Vietnamese-language journalist profile, submit or begin verification, create a source request, and manage incoming expert pitches for that request.
+A journalist can sign in without a password, create a Vietnamese-language journalist profile, establish verification through LinkedIn SSO or business email, create a source request, and manage incoming expert pitches for that request.
 
 **Why this priority**: Without journalist request creation, the marketplace has no supply of opportunities and the product has no core value.
 
-**Independent Test**: Can be fully tested by signing in as a journalist, creating a profile, creating a request, viewing it in the journalist dashboard, and accepting or rejecting an incoming pitch.
+**Independent Test**: Can be fully tested by signing in as a journalist, creating a profile, establishing verification, creating a request, viewing it in the journalist dashboard, and accepting or rejecting an incoming pitch.
 
 **Acceptance Scenarios**:
 
@@ -28,11 +28,11 @@ A journalist can sign in without a password, create a Vietnamese-language journa
 
 ### User Story 2 - Expert discovers requests and submits a pitch (Priority: P2)
 
-An expert can sign in without a password, create a Vietnamese-language expert profile, submit or begin verification, browse open requests available to authenticated experts, and submit a platform-managed pitch.
+An expert can sign in without a password, create a Vietnamese-language expert profile, establish verification through LinkedIn SSO or business email, browse open requests available to authenticated experts, and submit a platform-managed pitch.
 
 **Why this priority**: Once journalist requests exist, expert discovery and pitch submission are the minimum marketplace loop needed to validate adoption.
 
-**Independent Test**: Can be fully tested by signing in as an expert, browsing open requests, filtering to a relevant request, submitting one pitch, and observing that the pitch appears as pending for both expert and journalist flows.
+**Independent Test**: Can be fully tested by signing in as an expert, establishing verification, browsing open requests, filtering to a relevant request, submitting one pitch, and observing that the pitch appears as pending for both expert and journalist flows.
 
 **Acceptance Scenarios**:
 
@@ -42,19 +42,19 @@ An expert can sign in without a password, create a Vietnamese-language expert pr
 
 ---
 
-### User Story 3 - Admin reviews verification and moderates trust-sensitive flows (Priority: P3)
+### User Story 3 - Admin moderates trust-sensitive flows (Priority: P3)
 
-An admin can review user verification evidence, approve or reject submissions, and take moderation actions on users, requests, pitches, and verification records.
+An admin can view user verification status, take moderation actions on users, requests, pitches, and verification records, and manage trust-sensitive workflows.
 
-**Why this priority**: Trust is the core product differentiator; the MVP fails its positioning if verification and moderation do not exist.
+**Why this priority**: Trust is the core product differentiator; the MVP fails its positioning if moderation and verification visibility do not exist.
 
-**Independent Test**: Can be fully tested by submitting verification evidence as a journalist or expert, reviewing it as an admin, recording a decision, and confirming that only public-safe verification labels appear in profile trust displays.
+**Independent Test**: Can be fully tested by verifying users via LinkedIn or business email, viewing their profiles as an admin, observing verification labels, and taking moderation actions such as removing verification status for abuse.
 
 **Acceptance Scenarios**:
 
-1. **Given** a user has submitted verification evidence, **When** an admin approves or rejects it, **Then** the system records an append-only review decision and updates the user’s aggregate verification status.
+1. **Given** a user with LinkedIn or business email verification, **When** an admin reviews their profile, **Then** the system displays the verification method with the profile URL or domain, and the verification can be revoked if abuse is detected.
 2. **Given** a moderated request, pitch, user, or verification record, **When** an admin records a moderation action, **Then** the action is stored for auditability and the affected workflow respects that moderation state.
-3. **Given** a verified profile, **When** another authenticated user views its trust indicators, **Then** they see public-safe verification method labels without exposure of sensitive raw evidence.
+3. **Given** a verified profile with an invalid LinkedIn URL or expired business email, **When** the system detects the invalidity, **Then** an admin is notified and can take action to update or remove the verification badge.
 
 ---
 
@@ -64,12 +64,15 @@ An admin can review user verification evidence, approve or reject submissions, a
 - What happens when one account holds both `journalist` and `expert` roles and needs separate profile flows?
 - What happens when a journalist closes a request after pitches were already submitted?
 - What happens when an expert tries to submit a second pitch to the same request?
-- What happens when verification evidence is a broken link, inaccessible page, or unsupported evidence type?
 - What happens when a user is suspended after they already own requests, pitches, or pending verification records?
 - What happens when direct contact is allowed as a product concept but the MVP implementation is limited to platform inbox workflows?
 - What happens when Google OAuth is configured but the required public Privacy Policy and Terms of Service pages are missing or not reachable?
 - How does the system handle abuse controls such as rate limiting or CAPTCHA on passwordless login and pitch submission endpoints?
 - How does the system handle Vietnamese-first public UX while internal code, schema names, and payload keys remain English?
+- What happens when a LinkedIn profile becomes private or is deleted after initial verification?
+- What happens when a LinkedIn URL validation check fails (LinkedIn API down, rate limits, etc.)?
+- What happens when a user changes their business email domain after verification?
+- What happens when a business email domain verification fails or the domain expires?
 
 ## Requirements *(mandatory)*
 
@@ -79,9 +82,9 @@ An admin can review user verification evidence, approve or reject submissions, a
 - **FR-002**: The system MUST support at least the roles `journalist`, `expert`, and `admin`, and one account MUST be able to hold more than one role.
 - **FR-003**: The system MUST allow journalists to create and maintain a journalist profile in a Vietnamese-language product UI.
 - **FR-004**: The system MUST allow experts to create and maintain an expert profile in a Vietnamese-language product UI.
-- **FR-005**: The system MUST allow journalists and experts to submit verification evidence with structured evidence records and admin review outcomes.
-- **FR-006**: The system MUST store verification reviews as append-only decision records rather than only overwriting a single status field.
-- **FR-007**: The system MUST show public-safe verification method labels on profiles without exposing sensitive private evidence details.
+- **FR-005**: LinkedIn SSO authentication MUST automatically create a verification record with type `linkedin-verified`, capture the LinkedIn profile URL, and make it visible to all authenticated users on the profile.
+- **FR-006**: Business email domain verification MUST automatically create a verification record with type `business-email-verified`, validate the domain, and make the domain visible to all authenticated users on the profile.
+- **FR-007**: The system MUST show public-safe verification method labels (`linkedin-verified`, `business-email-verified`) on profiles with associated URLs or domain names visible to authenticated users, without exposing sensitive private evidence.
 - **FR-008**: The system MUST allow journalists to create, edit, close, and list their own source requests.
 - **FR-009**: Each source request MUST support the MVP field set: title, description, category, outlet name, deadline, language, region, preferred interview method, and number of experts required.
 - **FR-010**: The system MUST restrict MVP request visibility to authenticated experts and admins rather than the public web.
@@ -91,18 +94,19 @@ An admin can review user verification evidence, approve or reject submissions, a
 - **FR-014**: The system MUST support pitch statuses `pending`, `accepted`, `rejected`, `withdrawn`, and `request_closed`.
 - **FR-015**: The system MUST allow only the journalist who owns a request, or an admin, to accept or reject pitches for that request.
 - **FR-016**: The system MUST provide experts with a way to see the current status of their submitted pitches.
-- **FR-017**: The system MUST provide admins with a verification review queue and moderation controls for users, requests, pitches, and verification records.
-- **FR-018**: The system MUST record audit events for trust-sensitive and operationally important actions such as authentication, verification decisions, request changes, pitch changes, and moderation actions.
-- **FR-019**: The system MUST enforce server-side authorization checks for all protected actions.
-- **FR-020**: The system MUST use PostgreSQL as the system of record for users, profiles, verification evidence, verification reviews, requests, pitches, audit events, and moderation actions.
-- **FR-021**: The system MUST keep Strapi limited to content and marketing pages, and MUST NOT use Strapi as the system of record for marketplace or trust workflows.
-- **FR-022**: All public-facing MVP navigation, labels, validation messages, and workflow copy MUST default to Vietnamese.
-- **FR-023**: The system MUST support public Privacy Policy and Terms of Service pages if Google OAuth is included in any externally tested or launched environment.
-- **FR-024**: The system MUST block Google OAuth launch readiness until public legal page URLs exist and return successful responses.
-- **FR-025**: The system MUST include rate limiting and safe token handling for sensitive authentication and verification flows.
-- **FR-026**: The system MUST provide health checks and structured logging sufficient to debug moderation, delivery, and workflow issues.
-- **FR-027**: The system MUST support Docker Compose as the standard way to run the MVP stack in local development and deployment.
-- **FR-028**: The MVP MUST treat AI as assistive only, limited to functions such as spam detection, duplicate detection, or category suggestion, rather than making AI central to trust decisions.
+- **FR-017**: The system MUST provide admins with moderation controls for users, requests, pitches, and verification records, including the ability to revoke or suspend verification status.
+- **FR-018**: The system MUST automatically validate LinkedIn profile URLs and business email domains on a scheduled basis; if validation fails, the system MUST flag the verification record and notify the admin to take action.
+- **FR-019**: The system MUST record audit events for trust-sensitive and operationally important actions such as authentication, verification creation or revocation, request changes, pitch changes, and moderation actions.
+- **FR-020**: The system MUST enforce server-side authorization checks for all protected actions.
+- **FR-021**: The system MUST use PostgreSQL as the system of record for users, profiles, verification evidence, requests, pitches, audit events, and moderation actions.
+- **FR-022**: The system MUST keep Strapi limited to content and marketing pages, and MUST NOT use Strapi as the system of record for marketplace or trust workflows.
+- **FR-023**: All public-facing MVP navigation, labels, validation messages, and workflow copy MUST default to Vietnamese.
+- **FR-024**: The system MUST support public Privacy Policy and Terms of Service pages if Google OAuth is included in any externally tested or launched environment.
+- **FR-025**: The system MUST block Google OAuth launch readiness until public legal page URLs exist and return successful responses.
+- **FR-026**: The system MUST include rate limiting and safe token handling for sensitive authentication and verification flows.
+- **FR-027**: The system MUST provide health checks and structured logging sufficient to debug moderation, delivery, and workflow issues.
+- **FR-028**: The system MUST support Docker Compose as the standard way to run the MVP stack in local development and deployment.
+- **FR-029**: The MVP MUST treat AI as assistive only, limited to functions such as spam detection, duplicate detection, or category suggestion, rather than making AI central to trust decisions.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -110,25 +114,25 @@ An admin can review user verification evidence, approve or reject submissions, a
 - **UserRole**: Join model allowing one user to hold `journalist`, `expert`, and/or `admin` roles.
 - **JournalistProfile**: Journalist-facing professional profile with public-safe trust fields and optional sensitive contact fields.
 - **ExpertProfile**: Expert-facing professional profile with specialties, organization context, public-safe trust fields, and optional sensitive contact fields.
-- **VerificationEvidence**: Structured verification proof record containing type, URL or metadata, notes, and status.
-- **VerificationReview**: Append-only admin decision record for submitted verification evidence.
+- **VerificationEvidence**: Verification proof record containing provider (`linkedin` or `business_email`), provider_url (LinkedIn profile URL or business domain), status (`valid`, `expired`, `inaccessible`), created_at, and last_validated_at.
 - **SourceRequest**: Journalist-owned request for expert sources with workflow fields, visibility, and status.
 - **Pitch**: Expert response to a source request with message, supporting links, and status.
 - **AuditEvent**: Append-only event record for sensitive or operationally important actions.
-- **ModerationAction**: Admin action record for users, requests, pitches, or verification records.
+- **ModerationAction**: Admin action record for users, requests, pitches, or verification records with reason and timestamp.
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: A journalist can complete the MVP core journey from sign-in to published source request without using a password-based flow.
+- **SC-001**: A journalist can complete the MVP core journey from sign-in to published source request without using a password-based flow, with automatic verification via LinkedIn or business email.
 - **SC-002**: An authenticated expert can independently discover an open request, submit one pitch, and later observe a status update on that pitch.
-- **SC-003**: An admin can review submitted verification evidence and record an approval or rejection decision that updates visible trust state without exposing raw sensitive evidence.
+- **SC-003**: A verified profile displays LinkedIn-verified or business-email-verified badges with associated URLs or domains visible to all authenticated users.
 - **SC-004**: The product supports the full platform-observable workflow loop of request creation, pitch submission, and pitch decision with auditability for the key state transitions.
 - **SC-005**: All core user-facing MVP screens for public and authenticated product workflows launch in Vietnamese.
 - **SC-006**: If Google OAuth is enabled for external testing or launch, the deployed product exposes reachable public Privacy Policy and Terms of Service pages that return `200 OK`.
 - **SC-007**: Core marketplace and trust data remain in the application backend and PostgreSQL rather than being stored in Strapi.
 - **SC-008**: The deployed MVP exposes health checks and enough structured logs to diagnose authentication, moderation, and request or pitch workflow failures.
+- **SC-009**: LinkedIn profile URLs and business email domains are validated on a schedule; expired or inaccessible verifications are flagged for admin action without disrupting user access.
 
 ## Assumptions
 
@@ -137,7 +141,7 @@ An admin can review user verification evidence, approve or reject submissions, a
 - Organizations and newsroom hierarchies are deferred beyond MVP one and are represented by plain-text profile fields for now.
 - Public request browsing is out of scope for MVP one; requests are visible only to authenticated experts and admins.
 - The first implemented interaction path is the platform inbox workflow, even if direct contact remains a product concept or later extension.
-- The first launch may stage SSO provider rollout, but the MVP auth direction remains email login plus approved SSO and no passwords.
+- Verification is automatic via LinkedIn SSO or business email domain validation; no manual evidence submission or admin review is required.
 - Legal page content can start with founder-reviewed baseline copy, but the routes must exist publicly before Google OAuth launch verification.
 - Reputation in MVP is lightweight and limited to signals that can be observed by the platform; broader public scoring can be designed later.
 - The exact launch vertical, first journalist cohort, first expert cohort, and monetization path are intentionally not locked in this feature spec.
